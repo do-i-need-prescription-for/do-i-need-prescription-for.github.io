@@ -1,0 +1,12 @@
+{
+  "name": "Do I need prescription for",
+  "version": "0.1.0",
+  "description": "Do I need prescription for",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.19.3"
+  },
+  "scripts": {
+    "esbuild": "node esbuild.js"
+  }
+}
