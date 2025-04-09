@@ -1,52 +1,270 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medication Check Tool</title>
-    <script defer src="app.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.0.24/dist/tailwind.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Перевірка медикаментів для подорожі</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      padding: 1rem;
+      background: #f9fafb;
+      color: #111;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1, h2, h3 {
+      color: #1f2937;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input, select, button {
+      padding: 0.5rem;
+      width: 100%;
+      margin-top: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      font-weight: bold;
+      border: none;
+      margin-top: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+    }
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    th {
+      background: #f3f4f6;
+    }
+    .status-allowed { background-color: #d1fae5; }
+    .status-prescription { background-color: #fef3c7; }
+    .status-banned { background-color: #fee2e2; }
+    .hidden { display: none; }
+    .warning {
+      background-color: #fff7ed;
+      padding: 1rem;
+      border-left: 4px solid #f97316;
+      margin-top: 1rem;
+      border-radius: 6px;
+    }
+    .tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .tag {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.9em;
+      display: flex;
+      align-items: center;
+    }
+    .tag button {
+      margin-left: 6px;
+      background: none;
+      border: none;
+      color: #0369a1;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      tr { margin-bottom: 1rem; }
+      td {
+        padding-left: 50%;
+        position: relative;
+      }
+      td::before {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 45%;
+        padding-left: 0.5rem;
+        font-weight: bold;
+        white-space: nowrap;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100">
-<div class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold mb-6">Medication Check Tool</h1>
-
-    <form id="medication-form">
-        <!-- Departure Country -->
-        <div class="mb-4">
-            <label for="departure-country" class="block text-lg font-semibold">Select Departure Country</label>
-            <input type="text" id="departure-country" class="w-full mt-2 p-2 border border-gray-300 rounded" placeholder="Start typing a country..." autocomplete="off">
-            <div id="popular-countries" class="mt-2 text-sm">
-                <p><strong>Popular Countries:</strong></p>
-                <ul id="country-list" class="space-y-1"></ul>
-            </div>
-        </div>
-
-        <!-- Destination Countries -->
-        <div class="mb-4">
-            <label for="destination-countries" class="block text-lg font-semibold">Select Destination Countries</label>
-            <input type="text" id="destination-countries" class="w-full mt-2 p-2 border border-gray-300 rounded" placeholder="Select up to 5 countries..." autocomplete="off">
-        </div>
-
-        <!-- Mandatory Medication -->
-        <div class="mb-4">
-            <label for="mandatory-medication" class="block text-lg font-semibold">Mandatory Medications</label>
-            <input type="text" id="mandatory-medication" class="w-full mt-2 p-2 border border-gray-300 rounded" placeholder="Add mandatory medications..." autocomplete="off">
-        </div>
-
-        <!-- Optional Medication -->
-        <div class="mb-4">
-            <label for="optional-medication" class="block text-lg font-semibold">Optional Medications</label>
-            <input type="text" id="optional-medication" class="w-full mt-2 p-2 border border-gray-300 rounded" placeholder="Add optional medications..." autocomplete="off">
-        </div>
-
-        <!-- Check Button -->
-        <div class="flex justify-center">
-            <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Check</button>
-        </div>
-    </form>
-
-    <div id="results" class="mt-6"></div>
+<body>
+<h1>Перевірка медикаментів для подорожі</h1>
+<div class="warning">
+  ⚠️ Будь ласка, додатково перевіряйте інформацію в офіційних джерелах. Цей інструмент є допоміжним.
 </div>
+
+<form id="medicine-form">
+  <label>
+    Обов'язкові активні інгредієнти
+    <input type="text" id="required-input" placeholder="Введіть інгредієнт" list="ingredient-list" />
+  </label>
+  <div id="required-tags" class="tag-container"></div>
+
+  <label>
+    Опціональні активні інгредієнти
+    <input type="text" id="optional-input" placeholder="Введіть інгредієнт" list="ingredient-list" />
+  </label>
+  <div id="optional-tags" class="tag-container"></div>
+
+  <label>
+    Країна відправлення
+    <input type="text" id="departure-country" placeholder="Почніть вводити країну" list="country-list" required />
+  </label>
+
+  <label>
+    Країна призначення (1)
+    <input type="text" class="destination-country" placeholder="Почніть вводити країну" list="country-list" required />
+  </label>
+
+  <div id="more-destinations"></div>
+  <button type="button" id="add-destination">Додати ще країну</button>
+
+  <button type="submit" id="submit-button" disabled>Перевірити</button>
+</form>
+
+<datalist id="country-list"></datalist>
+<datalist id="ingredient-list"></datalist>
+
+<div id="results" class="hidden">
+  <h2>Результати (Тестові)</h2>
+  <table>
+    <thead>
+    <tr>
+      <th>Інгредієнт</th>
+      <th>Тип</th>
+      <th>Країна</th>
+      <th>Статус</th>
+      <th>Джерело</th>
+    </tr>
+    </thead>
+    <tbody id="results-body"></tbody>
+  </table>
+</div>
+
+<script>
+  const countries = ['Україна', 'Польща', 'Німеччина', 'Франція', 'Італія'];
+  const ingredients = ['Парацетамол', 'Ібупрофен', 'Кодеїн', 'Амоксицилін', 'Лоратадин'];
+
+  const countryList = document.getElementById('country-list');
+  const ingredientList = document.getElementById('ingredient-list');
+  countries.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    countryList.appendChild(opt);
+  });
+  ingredients.forEach(i => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    ingredientList.appendChild(opt);
+  });
+
+  const requiredInput = document.getElementById('required-input');
+  const optionalInput = document.getElementById('optional-input');
+  const requiredTags = document.getElementById('required-tags');
+  const optionalTags = document.getElementById('optional-tags');
+  const submitBtn = document.getElementById('submit-button');
+
+  const requiredValues = new Set();
+  const optionalValues = new Set();
+
+  function addTag(input, container, valuesSet) {
+    const val = input.value.trim();
+    if (!val || valuesSet.has(val)) return;
+    valuesSet.add(val);
+
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.innerHTML = `${val} <button>&times;</button>`;
+    tag.querySelector('button').onclick = () => {
+      container.removeChild(tag);
+      valuesSet.delete(val);
+      checkSubmitEnable();
+    };
+    container.appendChild(tag);
+    input.value = '';
+    checkSubmitEnable();
+  }
+
+  requiredInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag(requiredInput, requiredTags, requiredValues);
+    }
+  });
+
+  optionalInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag(optionalInput, optionalTags, optionalValues);
+    }
+  });
+
+  document.getElementById('medicine-form').addEventListener('input', checkSubmitEnable);
+
+  function checkSubmitEnable() {
+    const departure = document.getElementById('departure-country').value.trim();
+    const destinations = [...document.querySelectorAll('.destination-country')].filter(el => el.value.trim());
+    submitBtn.disabled = !(requiredValues.size > 0 && departure && destinations.length > 0);
+  }
+
+  let destinationCount = 1;
+  document.getElementById('add-destination').onclick = () => {
+    if (destinationCount >= 10) return;
+    destinationCount++;
+    const label = document.createElement('label');
+    label.innerHTML = `Країна призначення (${destinationCount}) <input type="text" class="destination-country" placeholder="Почніть вводити країну" list="country-list" />`;
+    document.getElementById('more-destinations').appendChild(label);
+  };
+
+  document.getElementById('medicine-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const resultsBody = document.getElementById('results-body');
+    resultsBody.innerHTML = '';
+    const destinations = [...document.querySelectorAll('.destination-country')]
+            .map(el => el.value.trim()).filter(Boolean);
+
+    const testStatuses = ['allowed', 'prescription', 'banned'];
+
+    for (const country of destinations) {
+      for (const ing of requiredValues) {
+        const status = testStatuses[Math.floor(Math.random() * 3)];
+        const tr = document.createElement('tr');
+        tr.className = `status-${status}`;
+        tr.innerHTML = `<td>${ing}</td><td>Обов'язковий</td><td>${country}</td><td>${status}</td><td>TestSource</td>`;
+        resultsBody.appendChild(tr);
+      }
+      for (const ing of optionalValues) {
+        const status = testStatuses[Math.floor(Math.random() * 3)];
+        const tr = document.createElement('tr');
+        tr.className = `status-${status}`;
+        tr.innerHTML = `<td>${ing}</td><td>Опціональний</td><td>${country}</td><td>${status}</td><td>TestSource</td>`;
+        resultsBody.appendChild(tr);
+      }
+    }
+
+    document.getElementById('results').classList.remove('hidden');
+  });
+</script>
 </body>
 </html>
