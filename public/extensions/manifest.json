@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Drugs parser",
+  "version": "1.0",
+  "description": "Drugs parser",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "icons": {},
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["example.js"]
+    },
+    {
+      "matches": ["https://example.com/*"],
+      "js": ["example.js"]
+    }
+  ]
+}
